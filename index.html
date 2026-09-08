@@ -4,7 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AniVerse</title>
-  <style>html,body{margin:0;background:#09090e;color:#fff;font-family:system-ui,sans-serif}#loading{padding:40px;text-align:center}</style>
+  <style>
+    html,body{margin:0;background:#09090e;color:#fff;font-family:system-ui,sans-serif}
+    #loading{padding:40px;text-align:center}
+  </style>
 </head>
 <body>
   <div id="loading">⚡ Loading AniVerse…</div>
@@ -12,54 +15,74 @@
   (async()=>{
     try{
       const url='./AniVerse%20-%20Anime%20Streaming%20Platform%20(1).html?v='+Date.now();
-      let html=await fetch(url,{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Site file failed to load');return r.text()});
+      let html=await fetch(url,{cache:'no-store'}).then(r=>{
+        if(!r.ok) throw Error('Site file failed to load');
+        return r.text();
+      });
 
+      // Repair the two syntax problems created by the old Admin publisher:
+      // 1) missing comma between objects
+      // 2) accidental double comma between objects
       const marker='const animeData = [';
       const s=html.indexOf(marker);
       if(s>=0){
         const e=html.indexOf('];',s);
         if(e>=0){
           let part=html.slice(s,e);
-          part=part.replace(/}\s*,?\s*\{/g,'},\n  {').replace(/},\s*,/g,'},');
-
-          // Home page should contain ONLY anime added through Admin.
-          // The original template entries use ids 1-10; Admin entries use Date.now() ids.
-          part=part.replace(/\{\s*id:\s*(?:[1-9]|10),[\s\S]*?\n\s*\},?/g,'');
-          part=part.replace(/^\s*,/,'').replace(/,\s*$/,'');
-
+          part=part.replace(/}\s*,?\s*\{/g,'},\n  {');
+          part=part.replace(/},\s*,/g,'},');
           html=html.slice(0,s)+marker+'\n'+part+'\n'+html.slice(e);
         }
       }
 
-      // Make the hero use the first anime added through Admin instead of the demo anime.
-      const heroScript=`<script>
+      // After the real page script runs, keep ONLY anime added by Admin.
+      // Demo entries use numeric ids 1-10; Admin entries use large timestamp ids.
+      const fixScript=`<script>
       (function(){
         try{
+          if(Array.isArray(animeData)){
+            const adminAnime=animeData.filter(a=>Number(a.id)>10);
+            animeData.splice(0,animeData.length,...adminAnime);
+          }
+
+          // Re-render the page using the filtered Admin-only list.
+          if(typeof renderGrids==='function') renderGrids();
+          if(typeof renderHeroBackdrop==='function') renderHeroBackdrop();
+
           const a=animeData[0];
-          if(!a)return;
+          if(!a) return;
+
+          // Use the first Admin-added anime for the hero.
           const hero=document.getElementById('heroSection');
+          if(!hero) return;
           const title=hero.querySelector('h1');
           const meta=hero.querySelector('.flex.flex-wrap.items-center.gap-4');
           const desc=hero.querySelector('p.text-slate-300');
           const watch=hero.querySelector('.btn-primary');
           const list=hero.querySelector('.btn-secondary');
-          if(title){title.textContent=a.title;}
-          if(meta){meta.innerHTML='<span class="text-amber-400 font-bold flex items-center gap-1">★ '+a.rating+'</span><span>•</span><span>'+a.year+'</span><span>•</span><span class="text-purple-400 font-semibold">'+a.eps+' Episodes</span><span>•</span><span class="bg-white/10 px-2 py-0.5 rounded text-xs">'+a.genre.join(', ')+'</span>';}
-          if(desc)desc.textContent=a.desc||'';
-          if(watch)watch.setAttribute('onclick','openAnimeModal('+a.id+', true)');
-          if(list)list.setAttribute('onclick','toggleBookmark('+a.id+', this)');
-          const bg=document.getElementById('heroBgContainer');
-          if(bg && typeof generateAnimeSVG==='function')bg.innerHTML='<img src="'+generateAnimeSVG(a.title,a.color,a.secondaryColor,a.badge)+'" class="w-full h-full object-cover" alt="'+a.title+'">';
-        }catch(e){}
-      })();
-      <\/script>`;
-      html=html.replace('</body>',heroScript+'</body>');
 
+          if(title) title.textContent=a.title;
+          if(meta) meta.innerHTML='<span class="text-amber-400 font-bold flex items-center gap-1">★ '+a.rating+'</span><span>•</span><span>'+a.year+'</span><span>•</span><span class="text-purple-400 font-semibold">'+a.eps+' Episodes</span><span>•</span><span class="bg-white/10 px-2 py-0.5 rounded text-xs">'+(a.genre||[]).join(', ')+'</span>';
+          if(desc) desc.textContent=a.desc||'';
+          if(watch) watch.setAttribute('onclick','openAnimeModal('+a.id+', true)');
+          if(list) list.setAttribute('onclick','toggleBookmark('+a.id+', this)');
+
+          const bg=document.getElementById('heroBgContainer');
+          if(bg && typeof generateAnimeSVG==='function'){
+            bg.innerHTML='<img src="'+generateAnimeSVG(a.title,a.color,a.secondaryColor,a.badge)+'" class="w-full h-full object-cover" alt="'+a.title+'">';
+          }
+        }catch(e){
+          console.error('AniVerse home filter error:',e);
+        }
+      })();
+      <\\/script>`;
+
+      html=html.replace('</body>',fixScript+'</body>');
       document.open();
       document.write(html);
       document.close();
     }catch(e){
-      document.body.innerHTML='<div style="padding:40px;text-align:center"><h2>AniVerse could not load</h2><p>'+e.message+'</p><button onclick="location.reload()">Retry</button></div>'
+      document.body.innerHTML='<div style="padding:40px;text-align:center"><h2>AniVerse could not load</h2><p>'+e.message+'</p><button onclick="location.reload()">Retry</button></div>';
     }
   })();
   </script>

@@ -4,10 +4,29 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AniVerse</title>
-  <meta http-equiv="refresh" content="0; url=./AniVerse%20-%20Anime%20Streaming%20Platform%20(1).html">
-  <script>location.replace('./AniVerse%20-%20Anime%20Streaming%20Platform%20(1).html');</script>
+  <style>html,body{margin:0;background:#09090e;color:#fff;font-family:system-ui,sans-serif}#loading{padding:40px;text-align:center}</style>
 </head>
 <body>
-  <p>Opening AniVerse…</p>
+  <div id="loading">Opening AniVerse…</div>
+  <script>
+  (async()=>{
+    try{
+      const url='./AniVerse%20-%20Anime%20Streaming%20Platform%20(1).html?v='+Date.now();
+      let html=await fetch(url,{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Site file failed to load');return r.text()});
+      const marker='const animeData = [';
+      const s=html.indexOf(marker);
+      if(s>=0){
+        const e=html.indexOf('];',s);
+        if(e>=0){
+          const part=html.slice(s,e);
+          html=html.slice(0,s)+part.replace(/}\s*\n\s*{/g,'},\n  {')+html.slice(e);
+        }
+      }
+      document.open();
+      document.write(html);
+      document.close();
+    }catch(e){document.body.innerHTML='<div style="padding:40px;text-align:center"><h2>AniVerse could not load</h2><p>'+e.message+'</p><button onclick="location.reload()">Retry</button></div>'}
+  })();
+  </script>
 </body>
 </html>

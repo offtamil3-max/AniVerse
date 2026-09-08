@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AniVerse — Premium Anime Streaming</title>
+<!-- Google Fonts & Tailwind CSS -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #09090e;
+  --surface: #12121a;
+  --surface2: #1a1a26;
+  --surface3: #242436;
+  --accent: #7c3aed;
+  --accent2: #a855f7;
+  --pink: #ec4899;
+  --cyan: #06b6d4;
+  --text: #f1f5f9;
+  --text-dim: #94a3b8;
+  --border: rgba(255,255,255,0.08);
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* Glassmorphism Classes */
+.glass {
+  background: rgba(18, 18, 26, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+}
+
+.glass-nav {
+  background: rgba(9, 9, 14, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 14px 28px;
+  transition: all 0.3s ease;
+}
+
+.logo-text {
+  font-size: 1.6rem; font-weight: 900;
+  background: linear-gradient(135deg, var(--accent2), var(--pink));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
+.nav-link {
+  font-size: 0.9rem; font-weight: 600; color: var(--text-dim);
+  transition: all 0.2s; position: relative; padding: 6px 0;
+}
+.nav-link:hover, .nav-link.active { color: #ffffff; }
+.nav-link.active::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+  height: 2.5px; background: linear-gradient(90deg, var(--accent), var(--pink));
+  border-radius: 2px;
+}
+
+/* Glow effects */
+.glow-orb {
+  position: fixed; width: 450px; height: 450px;
+  border-radius: 50%; filter: blur(140px); opacity: 0.12;
+  pointer-events: none; z-index: 0;
+}
+.glow-1 { background: var(--accent); top: -100px; right: -100px; }
+.glow-2 { background: var(--pink); bottom: -100px; left: -100px; }
+
+.hero {
+  position: relative; min-height: 82vh;
+  display: flex; align-items: center;
+  padding: 100px 28px 60px;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute; inset: 0; z-index: 0;
+}
+.hero-bg img, .hero-bg svg {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: brightness(0.4) saturate(1.2);
+}
+.hero-bg::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(to right, rgba(9,9,14,0.98) 25%, rgba(9,9,14,0.6) 60%, transparent 100%),
+              linear-gradient(to top, var(--bg) 5%, transparent 40%);
+}
+
+.btn-primary {
+  padding: 10px 24px; border-radius: 12px; border: none;
+  background: linear-gradient(135deg, var(--accent), var(--pink));
+  color: white; font-weight: 700; font-size: 0.9rem;
+  cursor: pointer; transition: all 0.25s ease;
+  box-shadow: 0 4px 15px rgba(124,58,237,0.3);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(236,72,153,0.4);
+}
+
+.btn-secondary {
+  padding: 10px 24px; border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.06);
+  color: var(--text); font-weight: 700; font-size: 0.9rem;
+  cursor: pointer; transition: all 0.25s ease;
+}
+.btn-secondary:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.genres-scroll {
+  display: flex; gap: 10px; overflow-x: auto;
+  scrollbar-width: none; padding-bottom: 8px;
+}
+.genres-scroll::-webkit-scrollbar { display: none; }
+
+.genre-pill {
+  padding: 8px 20px; border-radius: 20px;
+  background: var(--surface); border: 1px solid var(--border);
+  font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  white-space: nowrap; transition: all 0.25s;
+  color: var(--text-dim);
+}
+.genre-pill:hover, .genre-pill.active {
+  background: linear-gradient(135deg, var(--accent), var(--pink));
+  border-color: transparent; color: white;
+  box-shadow: 0 4px 15px rgba(124,58,237,0.3);
+}
+
+.anime-card {
+  position: relative; border-radius: 14px; overflow: hidden;
+  background: var(--surface); cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  border: 1px solid var(--border);
+}
+.anime-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: rgba(168,85,247,0.4);
+  box-shadow: 0 16px 32px rgba(0,0,0,0.5), 0 0 20px rgba(124,58,237,0.25);
+}
+.anime-card .poster-wrapper {
+  width: 100%; aspect-ratio: 3/4; overflow: hidden; position: relative;
+  background: var(--surface2);
+}
+.anime-card .poster-img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.5s ease;
+}
+.anime-card:hover .poster-img { transform: scale(1.08); }
+
+.anime-card .card-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(9,9,14,0.95) 0%, rgba(9,9,14,0.3) 50%, transparent 100%);
+  opacity: 0; transition: opacity 0.3s ease;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+}
+.anime-card:hover .card-overlay { opacity: 1; }
+
+.play-icon-btn {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--pink));
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 1.2rem;
+  box-shadow: 0 4px 20px rgba(236,72,153,0.5);
+  transform: scale(0.8); transition: transform 0.3s ease;
+}
+.anime-card:hover .play-icon-btn { transform: scale(1); }
+
+.badge-tag {
+  position: absolute; top: 10px; left: 10px; z-index: 2;
+  padding: 4px 9px; border-radius: 6px;
+  font-size: 0.65rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.badge-new { background: var(--pink); color: white; }
+.badge-hd { background: var(--accent); color: white; }
+.badge-sub { background: #10b981; color: white; }
+
+/* Modal & Player styling */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
+  display: flex; opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+  align-items: center; justify-content: center; padding: 16px;
+}
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+.modal-content {
+  background: var(--surface); border-radius: 20px;
+  max-width: 900px; width: 100%; max-height: 90vh;
+  overflow-y: auto; border: 1px solid var(--border);
+  transform: scale(0.95) translateY(20px);
+  transition: transform 0.3s ease;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7);
+}
+.modal-overlay.active .modal-content {
+  transform: scale(1) translateY(0);
+}
+
+/* Toast styling */
+.toast-container {
+  position: fixed; bottom: 24px; right: 24px; z-index: 300;
+  display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+}
+.toast {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); padding: 12px 20px; border-radius: 12px;
+  font-size: 0.88rem; font-weight: 600; display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  animation: toastIn 0.3s ease forwards, toastOut 0.3s ease 2.7s forwards;
+  pointer-events: auto;
+}
+@keyframes toastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes toastOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-10px); } }
+</style>
+</head>
+<body>
+
+<div class="glow-orb glow-1"></div>
+<div class="glow-orb glow-2"></div>
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- NAVIGATION -->
+<nav id="navbar" class="glass-nav border-b border-white/5">
+  <div class="max-w-7xl mx-auto flex items-center justify-between">
+    <div class="flex items-center gap-8">
+      <a href="#" class="logo-text flex items-center gap-2">
+        <span>Ani<span class="text-white font-normal">Verse</span></span>
+      </a>
+      <div class="hidden md:flex items-center gap-6">
+        <a href="#home" class="nav-link active" onclick="switchNavTab('home', this)">Home</a>
+        <a href="#browse" class="nav-link" onclick="switchNavTab('browse', this)">Browse All</a>
+        <a href="#schedule" class="nav-link" onclick="switchNavTab('schedule', this)">Schedule</a>
+        <a href="#mylist" class="nav-link" onclick="switchNavTab('mylist', this)">My List (<span id="myListCount">0</span>)</a>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <!-- Search Input -->
+      <div class="relative flex items-center">
+        <input type="text" id="searchInput" placeholder="Search anime..." 
+          class="bg-white/5 border border-white/10 rounded-xl px-4 py-2 pl-9 text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-purple-500 w-36 sm:w-60 transition-all">
+        <svg class="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+      </div>
+
+      <button class="btn-primary text-xs sm:text-sm py-2 px-4" onclick="showToast('✨ Sign Up feature opening soon!')">
+        Sign In
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN CONTAINER -->
+<main class="relative z-10 pt-16">
+
+<section class="hero" id="heroSection">
+  <div class="hero-bg" id="heroBgContainer">
+    <!-- Dynamic SVG or SVG graphic backdrop rendered via JS -->
+  </div>
+  <div class="max-w-7xl mx-auto w-full">
+    <div class="max-w-2xl">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-bold uppercase tracking-wider mb-4">
+        <span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span> Trending #1 This Season
+      </div>
+      <h1 class="text-4xl sm:text-6xl font-black text-white leading-tight mb-4 tracking-tight">
+        Celestial <span class="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-fuchsia-400 to-pink-500">Blade</span> Chronicles
+      </h1>
+      <div class="flex flex-wrap items-center gap-4 text-sm text-slate-300 mb-4 font-medium">
+        <span class="text-amber-400 font-bold flex items-center gap-1">★ 9.4</span>
+        <span>•</span>
+        <span>2024</span>
+        <span>•</span>
+        <span class="text-purple-400 font-semibold">24 Episodes</span>
+        <span>•</span>
+        <span class="bg-white/10 px-2 py-0.5 rounded text-xs">Action, Fantasy</span>
+      </div>
+      <p class="text-slate-300 text-sm sm:text-base leading-relaxed mb-6">
+        In a realm where celestial blades choose their masters, an exiled swordsman awakens a mythical ancient edge capable of cutting through space and time. Now pursued by rival guilds, he must unlock its 7 forbidden arts.
+      </p>
+      <div class="flex items-center gap-3">
+        <button class="btn-primary flex items-center gap-2" onclick="openAnimeModal(1, true)">
+          <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Watch Ep 1
+        </button>
+        <button class="btn-secondary flex items-center gap-2" onclick="toggleBookmark(1, this)">
+          <span id="heroListBtnText">+ My List</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="max-w-7xl mx-auto px-6 mt-8">
+  <div class="genres-scroll" id="genreFilter">
+    <div class="genre-pill active" data-genre="all">All Genres</div>
+    <div class="genre-pill" data-genre="action">Action</div>
+    <div class="genre-pill" data-genre="fantasy">Fantasy</div>
+    <div class="genre-pill" data-genre="sci-fi">Sci-Fi</div>
+    <div class="genre-pill" data-genre="romance">Romance</div>
+    <div class="genre-pill" data-genre="comedy">Comedy</div>
+    <div class="genre-pill" data-genre="thriller">Thriller</div>
+    <div class="genre-pill" data-genre="slice-of-life">Slice of Life</div>
+    <div class="genre-pill" data-genre="mecha">Mecha</div>
+  </div>
+</div>
+
+<!-- SECTION: TRENDING -->
+<section class="max-w-7xl mx-auto px-6 py-8" id="trendingSection">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-black tracking-tight text-white flex items-center gap-2">
+      Trending <span class="text-purple-400">Now</span>
+    </h2>
+    <a href="#browse" onclick="filterBySection('trending')" class="text-xs sm:text-sm font-bold text-purple-400 hover:text-pink-400 transition-colors">See All →</a>
+  </div>
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5" id="trendingGrid"></div>
+</section>
+
+<!-- SECTION: CONTINUE WATCHING -->
+<section class="max-w-7xl mx-auto px-6 py-6" id="continueSection">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-black tracking-tight text-white flex items-center gap-2">
+      Continue <span class="text-pink-500">Watching</span>
+    </h2>
+  </div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="continueGrid"></div>
+</section>
+
+<!-- SECTION: NEW RELEASES -->
+<section class="max-w-7xl mx-auto px-6 py-8" id="newSection">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-black tracking-tight text-white flex items-center gap-2">
+      New <span class="text-cyan-400">Releases</span>
+    </h2>
+    <a href="#browse" onclick="filterBySection('new')" class="text-xs sm:text-sm font-bold text-purple-400 hover:text-pink-400 transition-colors">See All →</a>
+  </div>
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5" id="newGrid"></div>
+</section>
+
+<!-- SECTION: MY LIST CONTAINER (Hidden until toggled or active) -->
+<section class="max-w-7xl mx-auto px-6 py-8 hidden" id="myListSection">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-black tracking-tight text-white flex items-center gap-2">
+      My Watch <span class="text-purple-400">List</span>
+    </h2>
+  </div>
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5" id="myListGrid"></div>
+  <div id="emptyMyList" class="text-center py-16 text-slate-400 hidden">
+    <p class="text-lg font-semibold mb-2">Your watchlist is currently empty.</p>
+    <p class="text-sm">Click "+ My List" on any anime card to bookmark it for later!</p>
+  </div>
+</section>
+
+<section class="max-w-7xl mx-auto px-6 py-10" id="scheduleSection">
+  <div class="mb-6">
+    <h2 class="text-2xl font-black tracking-tight text-white">
+      Weekly Simulcast <span class="text-purple-400">Schedule</span>
+    </h2>
+    <p class="text-xs text-slate-400 mt-1">Simulcast release dates updated daily (JST)</p>
+  </div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3" id="scheduleGrid"></div>
+</section>
+
+</main>
+
+<div class="modal-overlay" id="animeModal">
+  <div class="modal-content relative" id="modalContainer">
+    <button class="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-black/60 border border-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-all" onclick="closeModal()">✕</button>
+
+    <!-- Video Player Simulation Box -->
+    <div id="videoPlayerBox" class="relative bg-black w-full aspect-video flex items-center justify-center overflow-hidden group">
+      <div id="playerBackdrop" class="absolute inset-0 bg-cover bg-center opacity-60 filter blur-sm"></div>
+      
+      <!-- Video Controls overlay -->
+      <div class="relative z-10 text-center px-6" id="playerOverlayContent">
+        <div class="w-16 h-16 rounded-full bg-purple-600/90 text-white flex items-center justify-center mx-auto mb-3 shadow-xl cursor-pointer hover:scale-110 transition-transform" onclick="startSimulatedVideo()">
+          <svg class="w-8 h-8 fill-current ml-1" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-1" id="playerEpTitle">Episode 1 — The Awakening</h3>
+        <p class="text-xs text-slate-300">Click to Play 1080p Stream</p>
+      </div>
+
+      <!-- Animated Progress Bar for simulated video -->
+      <div id="videoProgressContainer" class="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20 hidden">
+        <div id="videoProgressBar" class="h-full bg-gradient-to-r from-purple-500 to-pink-500 w-0 transition-all duration-300"></div>
+      </div>
+    </div>
+
+    <!-- Modal Body Details -->
+    <div class="p-6">
+      <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
+        <div>
+          <h2 class="text-2xl font-black text-white" id="modalTitle">Anime Title</h2>
+          <div class="flex items-center gap-3 text-xs text-slate-400 mt-1 font-medium" id="modalMeta"></div>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn-primary py-2 px-4 text-xs" id="modalWatchBtn" onclick="startSimulatedVideo()">▶ Play Stream</button>
+          <button class="btn-secondary py-2 px-4 text-xs" id="modalBookmarkBtn" onclick="toggleBookmarkFromModal()">+ My List</button>
+        </div>
+      </div>
+
+      <p class="text-slate-300 text-sm leading-relaxed mb-6" id="modalDesc"></p>
+
+      <!-- Episode Grid Selector -->
+      <div class="mb-6">
+        <h4 class="text-sm font-bold text-white mb-3 flex items-center justify-between">
+          <span>Episodes</span>
+          <span class="text-xs font-normal text-slate-400">Season 1</span>
+        </h4>
+        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 max-h-48 overflow-y-auto pr-1" id="modalEpisodeList"></div>
+      </div>
+
+      <!-- Genre Tags -->
+      <div class="flex flex-wrap gap-2" id="modalGenres"></div>
+    </div>
+  </div>
+</div>
+
+<footer class="border-t border-white/5 bg-black/40 mt-16 py-10 px-6 relative z-10">
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+    <div class="logo-text text-xl">Ani<span>Verse</span></div>
+    <div class="flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400 font-medium">
+      <a href="#" class="hover:text-white transition-colors">Terms of Service</a>
+      <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+      <a href="#" class="hover:text-white transition-colors">Anime Schedule</a>
+      <a href="#" class="hover:text-white transition-colors">DMCA Notice</a>
+      <a href="#" class="hover:text-white transition-colors">Help Center</a>
+    </div>
+    <div class="text-xs text-slate-500">
+      © 2026 AniVerse Inc. All rights reserved.
+    </div>
+  </div>
+</footer>
+
+<script>
+const animeData = [
+  { 
+    id: 1, 
+    title: "Celestial Blade Chronicles", 
+    rating: 9.4, 
+    year: 2024, 
+    eps: 24, 
+    genre: ["action", "fantasy"], 
+    badge: "hd", 
+    color: "#7c3aed",
+    secondaryColor: "#ec4899",
+    desc: "In a world where celestial blades choose their masters, an exiled swordsman awakens a mythical ancient edge capable of cutting through space and time. Now pursued by rival guilds, he must unlock its 7 forbidden arts." 
+  },
+  { 
+    id: 2, 
+    title: "Neon Genesis Academy", 
+    rating: 8.9, 
+    year: 2024, 
+    eps: 12, 
+    genre: ["sci-fi", "action"], 
+    badge: "new", 
+    color: "#3b82f6",
+    secondaryColor: "#06b6d4",
+    desc: "In a hyper-futuristic Tokyo academy, students pilot neural-linked cyber armor to defend Earth from mysterious cosmic rifts." 
+  },
+  { 
+    id: 3, 
+    title: "Sakura Heart Beat", 
+    rating: 8.6, 
+    year: 2024, 
+    eps: 13, 
+    genre: ["romance", "slice-of-life"], 
+    badge: "sub", 
+    color: "#ec4899",
+    secondaryColor: "#f43f5e",
+    desc: "A reserved high school pianist and an energetic street dancer discover an improbable harmony that changes their lives under the cherry blossoms." 
+  },
+  { 
+    id: 4, 
+    title: "Phantom Realm Detective", 
+    rating: 9.1, 
+    year: 2024, 
+    eps: 24, 
+    genre: ["thriller", "fantasy"], 
+    badge: "hd", 
+    color: "#8b5cf6",
+    secondaryColor: "#6366f1",
+    desc: "A rogue investigator gifted with spiritual vision tackles supernatural mysteries and ancient spectral crimes hidden deep within Shibuya." 
+  },
+  { 
+    id: 5, 
+    title: "Dragon's Oath: Sovereign", 
+    rating: 8.8, 
+    year: 2023, 
+    eps: 25, 
+    genre: ["action", "fantasy"], 
+    badge: "hd", 
+    color: "#ef4444",
+    secondaryColor: "#f97316",
+    desc: "The last remaining dragon knight must gather four fractured clans to withstand an apocalyptic crusade threat." 
+  },
+  { 
+    id: 6, 
+    title: "Starlight Café Express", 
+    rating: 8.4, 
+    year: 2024, 
+    eps: 12, 
+    genre: ["comedy", "slice-of-life"], 
+    badge: "new", 
+    color: "#10b981",
+    secondaryColor: "#14b8a6",
+    desc: "A magical mobile coffee shop travels across dimensions, serving eccentric drinks to cosmic travelers with unusual stories." 
+  },
+  { 
+    id: 7, 
+    title: "Mecha Storm Zero", 
+    rating: 8.9, 
+    year: 2024, 
+    eps: 24, 
+    genre: ["mecha", "sci-fi"], 
+    badge: "hd", 
+    color: "#2563eb",
+    secondaryColor: "#3b82f6",
+    desc: "Humanity's last orbital fortress deploys experimental humanoid titans powered by dark matter reactors." 
+  },
+  { 
+    id: 8, 
+    title: "Whisper of Midnight", 
+    rating: 8.7, 
+    year: 2024, 
+    eps: 13, 
+    genre: ["thriller", "fantasy"], 
+    badge: "sub", 
+    color: "#64748b",
+    secondaryColor: "#475569",
+    desc: "High schoolers trapped in an altered dimension must solve urban legends to escape before midnight consumes them." 
+  },
+  { 
+    id: 9, 
+    title: "Cyber Ronin 2099", 
+    rating: 9.3, 
+    year: 2024, 
+    eps: 12, 
+    genre: ["sci-fi", "action"], 
+    badge: "hd", 
+    color: "#f59e0b",
+    secondaryColor: "#d97706",
+    desc: "A cybernetically enhanced mercenary seeks vengeance through the rain-slicked neon alleys of Neo-Kyoto." 
+  },
+  { 
+    id: 10, 
+    title: "Garden of Memory Echoes", 
+    rating: 8.5, 
+    year: 2024, 
+    eps: 24, 
+    genre: ["slice-of-life", "fantasy"], 
+    badge: "sub", 
+    color: "#059669",
+    secondaryColor: "#10b981",
+    desc: "A quiet botanist tends to a sanctuary of flora that preserves the lost memories and emotions of departed souls." 
+  }
+];
+
+const scheduleData = {
+  "Mon": [{ title: "Celestial Blade", time: "18:00", color: "#7c3aed" }, { title: "Starlight Café", time: "20:30", color: "#ec4899" }],
+  "Tue": [{ title: "Neon Genesis", time: "17:00", color: "#3b82f6" }, { title: "Phantom Realm", time: "21:00", color: "#8b5cf6" }],
+  "Wed": [{ title: "Dragon's Oath", time: "18:30", color: "#ef4444" }, { title: "Garden Echoes", time: "20:00", color: "#10b981" }],
+  "Thu": [{ title: "Cyber Ronin", time: "19:00", color: "#f59e0b" }, { title: "Sakura Heart", time: "21:30", color: "#ec4899" }],
+  "Fri": [{ title: "Mecha Storm", time: "17:30", color: "#3b82f6" }, { title: "Whisper Midnight", time: "22:00", color: "#64748b" }],
+  "Sat": [{ title: "Garden Echoes", time: "10:00", color: "#10b981" }, { title: "Celestial Blade", time: "15:00", color: "#7c3aed" }],
+  "Sun": [{ title: "Phantom Realm", time: "18:00", color: "#8b5cf6" }, { title: "Dragon's Oath", time: "20:00", color: "#ef4444" }]
+};
+
+// Bookmarks in LocalStorage
+let userBookmarks = JSON.parse(localStorage.getItem('aniverse_bookmarks') || '[]');
+let activeModalAnimeId = null;
+let isPlayingSimulatedVideo = false;
+
+function generateAnimeSVG(title, color1, color2, badge) {
+  const encodedTitle = title.replace(/'/g, "&apos;");
+  return `data:image/svg+xml;utf8,
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="100%" height="100%">
+    <defs>
+      <linearGradient id="grad_${color1.replace('#','')}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="${color1}" />
+        <stop offset="100%" stop-color="${color2}" />
+      </linearGradient>
+      <linearGradient id="overlayGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="rgba(0,0,0,0.1)" />
+        <stop offset="60%" stop-color="rgba(0,0,0,0.4)" />
+        <stop offset="100%" stop-color="rgba(10,10,18,0.95)" />
+      </linearGradient>
+    </defs>
+    <rect width="300" height="400" fill="url(#grad_${color1.replace('#','')})" />
+    <circle cx="220" cy="100" r="120" fill="white" opacity="0.08" />
+    <path d="M-20,300 L150,180 L320,380 Z" fill="white" opacity="0.06" />
+    <rect width="300" height="400" fill="url(#overlayGrad)" />
+    <text x="20" y="320" font-family="sans-serif" font-weight="900" font-size="22" fill="%23ffffff">${encodedTitle.split(' ')[0]}</text>
+    <text x="20" y="348" font-family="sans-serif" font-weight="700" font-size="16" fill="%23cbd5e1">${encodedTitle.split(' ').slice(1).join(' ')}</text>
+  </svg>`.replace(/\n/g, '').replace(/\s+/g, ' ');
+}
+
+// Generate hero SVG backdrop
+function renderHeroBackdrop() {
+  const container = document.getElementById('heroBgContainer');
+  const svgData = generateAnimeSVG("Celestial Blade Chronicles", "#5b21b6", "#be185d", "HD");
+  container.innerHTML = `<img src="${svgData}" class="w-full h-full object-cover" alt="Hero Backdrop">`;
+}
+
+function createAnimeCardMarkup(anime) {
+  const isBookmarked = userBookmarks.includes(anime.id);
+  const posterSvg = generateAnimeSVG(anime.title, anime.color, anime.secondaryColor, anime.badge);
+  
+  const badgeClass = anime.badge === 'new' ? 'badge-new' : anime.badge === 'hd' ? 'badge-hd' : 'badge-sub';
+  
+  return `
+    <div class="anime-card group" data-genre="${anime.genre.join(',')}" data-id="${anime.id}" onclick="openAnimeModal(${anime.id})">
+      <div class="poster-wrapper">
+        <img class="poster-img" src="${posterSvg}" alt="${anime.title}" loading="lazy">
+        <span class="badge-tag ${badgeClass}">${anime.badge}</span>
+        <div class="card-overlay">
+          <div class="play-icon-btn">▶</div>
+          <span class="text-xs font-bold text-white mt-3 bg-black/60 px-3 py-1 rounded-full backdrop-blur-md">Watch Ep 1</span>
+        </div>
+      </div>
+      <div class="p-3">
+        <h3 class="text-xs sm:text-sm font-bold text-white truncate group-hover:text-purple-300 transition-colors">${anime.title}</h3>
+        <div class="flex items-center justify-between text-xs text-slate-400 mt-1">
+          <span class="text-amber-400 font-semibold flex items-center gap-1">★ ${anime.rating}</span>
+          <span class="text-purple-400 font-medium">EP ${anime.eps}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderGrids() {
+  const trendingGrid = document.getElementById('trendingGrid');
+  const newGrid = document.getElementById('newGrid');
+  const continueGrid = document.getElementById('continueGrid');
+  
+  const sortedByRating = [...animeData].sort((a,b) => b.rating - a.rating);
+  trendingGrid.innerHTML = sortedByRating.map(a => createAnimeCardMarkup(a)).join('');
+
+  const newReleases = animeData.filter(a => a.year === 2024);
+  newGrid.innerHTML = newReleases.map(a => createAnimeCardMarkup(a)).join('');
+
+  // Render continue watching items
+  const continueItems = animeData.slice(0, 4);
+  const progressList = [75, 40, 85, 20];
+  continueGrid.innerHTML = continueItems.map((a, idx) => {
+    const posterSvg = generateAnimeSVG(a.title, a.color, a.secondaryColor, a.badge);
+    return `
+      <div class="flex gap-3 bg-slate-900/80 p-3 rounded-xl border border-white/5 hover:border-purple-500/30 cursor-pointer transition-all" onclick="openAnimeModal(${a.id}, true)">
+        <div class="w-24 h-16 rounded-lg overflow-hidden relative flex-shrink-0 bg-slate-800">
+          <img src="${posterSvg}" class="w-full h-full object-cover">
+          <div class="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
+            <div class="h-full bg-gradient-to-r from-purple-500 to-pink-500" style="width:${progressList[idx]}%"></div>
+          </div>
+        </div>
+        <div class="flex flex-col justify-center overflow-hidden">
+          <h4 class="text-xs font-bold text-white truncate">${a.title}</h4>
+          <span class="text-xs text-slate-400 mt-0.5">Ep ${Math.floor(a.eps * (progressList[idx]/100))} of ${a.eps}</span>
+          <span class="text-[10px] text-purple-400 font-semibold mt-1">▶ Resume Stream</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  renderSchedule();
+  renderMyListGrid();
+}
+
+function renderSchedule() {
+  const grid = document.getElementById('scheduleGrid');
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const todayIdx = (new Date().getDay() + 6) % 7; // Align Monday = 0
+  
+  grid.innerHTML = days.map((day, i) => `
+    <div class="bg-slate-900/70 border ${i === todayIdx ? 'border-purple-500/80 bg-purple-900/10' : 'border-white/5'} rounded-xl p-3">
+      <div class="text-xs font-extrabold uppercase tracking-wider text-center mb-3 ${i === todayIdx ? 'text-purple-400' : 'text-slate-400'}">
+        ${day} ${i === todayIdx ? '• Today' : ''}
+      </div>
+      <div class="space-y-2">
+        ${scheduleData[day].map(item => `
+          <div class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer" onclick="showToast('⏰ ${item.title} drops at ${item.time} JST')">
+            <div class="w-1.5 h-7 rounded-full flex-shrink-0" style="background:${item.color}"></div>
+            <div class="overflow-hidden">
+              <div class="text-[11px] font-bold text-slate-200 truncate">${item.title}</div>
+              <div class="text-[10px] text-slate-400">${item.time} JST</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderMyListGrid() {
+  const container = document.getElementById('myListGrid');
+  const emptyState = document.getElementById('emptyMyList');
+  const countBadge = document.getElementById('myListCount');
+
+  countBadge.textContent = userBookmarks.length;
+
+  if (userBookmarks.length === 0) {
+    container.innerHTML = '';
+    emptyState.classList.remove('hidden');
+    return;
+  }
+
+  emptyState.classList.add('hidden');
+  const bookmarkedAnime = animeData.filter(a => userBookmarks.includes(a.id));
+  container.innerHTML = bookmarkedAnime.map(a => createAnimeCardMarkup(a)).join('');
+}
+
+function openAnimeModal(id, autoPlay = false) {
+  const anime = animeData.find(a => a.id === id);
+  if (!anime) return;
+
+  activeModalAnimeId = id;
+  const modal = document.getElementById('animeModal');
+  const isBookmarked = userBookmarks.includes(anime.id);
+
+  document.getElementById('modalTitle').textContent = anime.title;
+  document.getElementById('modalMeta').innerHTML = `
+    <span class="text-amber-400 font-bold">★ ${anime.rating}</span> •
+    <span>${anime.year}</span> •
+    <span>${anime.eps} Episodes</span>
+  `;
+  document.getElementById('modalDesc').textContent = anime.desc;
+  
+  // Set poster background in player box
+  const svgData = generateAnimeSVG(anime.title, anime.color, anime.secondaryColor, anime.badge);
+  document.getElementById('playerBackdrop').style.backgroundImage = `url("${svgData}")`;
+  document.getElementById('playerEpTitle').textContent = `Episode 1 — Awakening`;
+
+  // Episode grid generator
+  const epGrid = document.getElementById('modalEpisodeList');
+  epGrid.innerHTML = Array.from({ length: anime.eps }, (_, i) => `
+    <button class="py-2 px-3 rounded-lg text-xs font-bold ${i === 0 ? 'bg-purple-600 text-white' : 'bg-white/5 hover:bg-white/10 text-slate-300'} border border-white/5 transition-all text-center" onclick="selectEpisode(${i + 1})">
+      EP ${i + 1}
+    </button>
+  `).join('');
+
+  // Genre tags
+  document.getElementById('modalGenres').innerHTML = anime.genre.map(g => `
+    <span class="text-xs font-semibold px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 uppercase">${g}</span>
+  `).join('');
+
+  // Update button text
+  document.getElementById('modalBookmarkBtn').textContent = isBookmarked ? '✓ In My List' : '+ My List';
+
+  modal.classList.add('active');
+
+  if (autoPlay) {
+    startSimulatedVideo();
+  }
+}
+
+function closeModal() {
+  document.getElementById('animeModal').classList.remove('active');
+  resetSimulatedVideo();
+}
+
+function startSimulatedVideo() {
+  isPlayingSimulatedVideo = true;
+  showToast("▶ Stream started in 1080p HD Ultra");
+  const overlay = document.getElementById('playerOverlayContent');
+  const progressContainer = document.getElementById('videoProgressContainer');
+  const progressBar = document.getElementById('videoProgressBar');
+
+  overlay.innerHTML = `
+    <div class="text-xs text-purple-400 font-mono tracking-widest uppercase mb-2 animate-pulse">● Live Stream Playing</div>
+    <div class="text-sm font-bold text-white">1080p 60fps • Japanese Audio (SUB)</div>
+  `;
+  
+  progressContainer.classList.remove('hidden');
+  progressBar.style.width = '0%';
+  setTimeout(() => { progressBar.style.width = '100%'; }, 100);
+}
+
+function resetSimulatedVideo() {
+  isPlayingSimulatedVideo = false;
+  const overlay = document.getElementById('playerOverlayContent');
+  const progressContainer = document.getElementById('videoProgressContainer');
+  
+  progressContainer.classList.add('hidden');
+  overlay.innerHTML = `
+    <div class="w-16 h-16 rounded-full bg-purple-600/90 text-white flex items-center justify-center mx-auto mb-3 shadow-xl cursor-pointer hover:scale-110 transition-transform" onclick="startSimulatedVideo()">
+      <svg class="w-8 h-8 fill-current ml-1" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </div>
+    <h3 class="text-lg font-bold text-white mb-1" id="playerEpTitle">Episode 1 — The Awakening</h3>
+    <p class="text-xs text-slate-300">Click to Play 1080p Stream</p>
+  `;
+}
+
+function selectEpisode(epNumber) {
+  showToast(`▶ Loaded Episode ${epNumber}`);
+  document.getElementById('playerEpTitle').textContent = `Episode ${epNumber}`;
+  startSimulatedVideo();
+}
+
+function toggleBookmark(id, buttonEl = null) {
+  const index = userBookmarks.indexOf(id);
+  const anime = animeData.find(a => a.id === id);
+
+  if (index > -1) {
+    userBookmarks.splice(index, 1);
+    showToast(`Removed "${anime.title}" from My List`);
+  } else {
+    userBookmarks.push(id);
+    showToast(`Added "${anime.title}" to My List!`);
+  }
+
+  localStorage.setItem('aniverse_bookmarks', JSON.stringify(userBookmarks));
+  renderMyListGrid();
+
+  if (buttonEl) {
+    const isBookmarked = userBookmarks.includes(id);
+    buttonEl.textContent = isBookmarked ? '✓ In My List' : '+ My List';
+  }
+}
+
+function toggleBookmarkFromModal() {
+  if (!activeModalAnimeId) return;
+  toggleBookmark(activeModalAnimeId, document.getElementById('modalBookmarkBtn'));
+}
+
+// Genre filter handler
+document.getElementById('genreFilter').addEventListener('click', (e) => {
+  if (!e.target.classList.contains('genre-pill')) return;
+  
+  document.querySelectorAll('.genre-pill').forEach(p => p.classList.remove('active'));
+  e.target.classList.add('active');
+  
+  const genre = e.target.dataset.genre;
+  document.querySelectorAll('.anime-card').forEach(card => {
+    if (genre === 'all') {
+      card.style.display = '';
+    } else {
+      const cardGenres = card.dataset.genre.split(',');
+      card.style.display = cardGenres.includes(genre) ? '' : 'none';
+    }
+  });
+});
+
+// Search input handler
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  const query = e.target.value.toLowerCase().trim();
+  document.querySelectorAll('.anime-card').forEach(card => {
+    const title = card.querySelector('h3').textContent.toLowerCase();
+    card.style.display = title.includes(query) ? '' : 'none';
+  });
+});
+
+function switchNavTab(tabName, linkEl) {
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  if (linkEl) linkEl.classList.add('active');
+
+  const hero = document.getElementById('heroSection');
+  const trending = document.getElementById('trendingSection');
+  const newSec = document.getElementById('newSection');
+  const contSec = document.getElementById('continueSection');
+  const mySec = document.getElementById('myListSection');
+
+  if (tabName === 'mylist') {
+    hero.classList.add('hidden');
+    trending.classList.add('hidden');
+    newSec.classList.add('hidden');
+    contSec.classList.add('hidden');
+    mySec.classList.remove('hidden');
+  } else {
+    hero.classList.remove('hidden');
+    trending.classList.remove('hidden');
+    newSec.classList.remove('hidden');
+    contSec.classList.remove('hidden');
+    mySec.classList.add('hidden');
+  }
+}
+
+function showToast(message) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<span>${message}</span>`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.remove();
+  }, 3000);
+}
+
+// Navbar scroll backdrop handler
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('navbar');
+  if (window.scrollY > 40) {
+    nav.classList.add('bg-black/90', 'shadow-xl');
+  } else {
+    nav.classList.remove('bg-black/90', 'shadow-xl');
+  }
+});
+
+// Initialize setup
+renderHeroBackdrop();
+renderGrids();
+</script>
+</body>
+</html>

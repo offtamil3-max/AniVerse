@@ -13,26 +13,54 @@
     try{
       const url='./AniVerse%20-%20Anime%20Streaming%20Platform%20(1).html?v='+Date.now();
       let html=await fetch(url,{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Site file failed to load');return r.text()});
+
       const marker='const animeData = [';
       const s=html.indexOf(marker);
       if(s>=0){
         const e=html.indexOf('];',s);
         if(e>=0){
           let part=html.slice(s,e);
-          // Repair malformed anime objects created by repeated publishing.
-          part=part.replace(/}\s*,?\s*\{/g,'},\n  {');
-          part=part.replace(/},\s*,+/g,'},');
-          part=part.replace(/\n\s*,\s*\n/g,'\n');
-          html=html.slice(0,s)+part+html.slice(e);
+          part=part.replace(/}\s*,?\s*\{/g,'},\n  {').replace(/},\s*,/g,'},');
+
+          // Home page should contain ONLY anime added through Admin.
+          // The original template entries use ids 1-10; Admin entries use Date.now() ids.
+          part=part.replace(/\{\s*id:\s*(?:[1-9]|10),[\s\S]*?\n\s*\},?/g,'');
+          part=part.replace(/^\s*,/,'').replace(/,\s*$/,'');
+
+          html=html.slice(0,s)+marker+'\n'+part+'\n'+html.slice(e);
         }
       }
-      // Add a safe AniList metadata fallback to the existing search box.
-      const patch=`<script>(function(){function addApiSearch(){var input=document.getElementById('searchInput');if(!input)return;var timer;input.addEventListener('input',function(){clearTimeout(timer);var q=input.value.trim();if(!q)return;timer=setTimeout(async function(){var cards=[...document.querySelectorAll('.anime-card')];var visible=cards.some(function(c){return c.style.display!=='none'});if(visible)return;try{var query='query($search:String){Page(perPage:6){media(search:$search,type:ANIME){id title{english romaji}averageScore startDate{year}episodes genres coverImage{large}description}}}';var r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:query,variables:{search:q}})});if(!r.ok)return;var j=await r.json();var list=(j.data&&j.data.Page&&j.data.Page.media)||[];if(!list.length)return;list.forEach(function(x){if(!window.animeData)return;if(window.animeData.some(function(a){return String(a.apiId||'')===String(x.id)||a.title.toLowerCase()===(x.title.english||x.title.romaji||'').toLowerCase()}))return;window.animeData.push({id:900000000+x.id,apiId:x.id,title:x.title.english||x.title.romaji||'Unknown',rating:x.averageScore?x.averageScore/10:0,year:x.startDate&&x.startDate.year||0,eps:x.episodes||0,genre:(x.genres||[]).map(function(g){return g.toLowerCase()}),badge:'new',color:'#7c3aed',secondaryColor:'#ec4899',desc:(x.description||'').replace(/<[^>]*>/g,''),poster:x.coverImage&&x.coverImage.large||''});});if(typeof renderGrids==='function')renderGrids();input.dispatchEvent(new Event('input'));}catch(e){}} ,500)});};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',addApiSearch);else addApiSearch();})();<\/script>`;
-      html=html.replace('</body>',patch+'</body>');
+
+      // Make the hero use the first anime added through Admin instead of the demo anime.
+      const heroScript=`<script>
+      (function(){
+        try{
+          const a=animeData[0];
+          if(!a)return;
+          const hero=document.getElementById('heroSection');
+          const title=hero.querySelector('h1');
+          const meta=hero.querySelector('.flex.flex-wrap.items-center.gap-4');
+          const desc=hero.querySelector('p.text-slate-300');
+          const watch=hero.querySelector('.btn-primary');
+          const list=hero.querySelector('.btn-secondary');
+          if(title){title.textContent=a.title;}
+          if(meta){meta.innerHTML='<span class="text-amber-400 font-bold flex items-center gap-1">★ '+a.rating+'</span><span>•</span><span>'+a.year+'</span><span>•</span><span class="text-purple-400 font-semibold">'+a.eps+' Episodes</span><span>•</span><span class="bg-white/10 px-2 py-0.5 rounded text-xs">'+a.genre.join(', ')+'</span>';}
+          if(desc)desc.textContent=a.desc||'';
+          if(watch)watch.setAttribute('onclick','openAnimeModal('+a.id+', true)');
+          if(list)list.setAttribute('onclick','toggleBookmark('+a.id+', this)');
+          const bg=document.getElementById('heroBgContainer');
+          if(bg && typeof generateAnimeSVG==='function')bg.innerHTML='<img src="'+generateAnimeSVG(a.title,a.color,a.secondaryColor,a.badge)+'" class="w-full h-full object-cover" alt="'+a.title+'">';
+        }catch(e){}
+      })();
+      <\/script>`;
+      html=html.replace('</body>',heroScript+'</body>');
+
       document.open();
       document.write(html);
       document.close();
-    }catch(e){document.body.innerHTML='<div style="padding:40px;text-align:center"><h2>AniVerse could not load</h2><p>'+e.message+'</p><button onclick="location.reload()">Retry</button></div>'}
+    }catch(e){
+      document.body.innerHTML='<div style="padding:40px;text-align:center"><h2>AniVerse could not load</h2><p>'+e.message+'</p><button onclick="location.reload()">Retry</button></div>'
+    }
   })();
   </script>
 </body>

@@ -7,7 +7,7 @@
   <style>html,body{margin:0;background:#09090e;color:#fff;font-family:system-ui,sans-serif}#loading{padding:40px;text-align:center}</style>
 </head>
 <body>
-  <div id="loading">Opening AniVerse…</div>
+  <div id="loading">⚡ Loading AniVerse…</div>
   <script>
   (async()=>{
     try{
@@ -18,8 +18,10 @@
       if(s>=0){
         const e=html.indexOf('];',s);
         if(e>=0){
-          const part=html.slice(s,e);
-          html=html.slice(0,s)+part.replace(/}\s*\n\s*{/g,'},\n  {')+html.slice(e);
+          let part=html.slice(s,e);
+          // Repair missing commas and duplicate commas between anime objects.
+          part=part.replace(/}\s*,?\s*\{/g,'},\n  {').replace(/},\s*,/g,'},');
+          html=html.slice(0,s)+part+html.slice(e);
         }
       }
       document.open();

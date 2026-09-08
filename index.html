@@ -19,11 +19,16 @@
         const e=html.indexOf('];',s);
         if(e>=0){
           let part=html.slice(s,e);
-          // Repair missing commas and duplicate commas between anime objects.
-          part=part.replace(/}\s*,?\s*\{/g,'},\n  {').replace(/},\s*,/g,'},');
+          // Repair malformed anime objects created by repeated publishing.
+          part=part.replace(/}\s*,?\s*\{/g,'},\n  {');
+          part=part.replace(/},\s*,+/g,'},');
+          part=part.replace(/\n\s*,\s*\n/g,'\n');
           html=html.slice(0,s)+part+html.slice(e);
         }
       }
+      // Add a safe AniList metadata fallback to the existing search box.
+      const patch=`<script>(function(){function addApiSearch(){var input=document.getElementById('searchInput');if(!input)return;var timer;input.addEventListener('input',function(){clearTimeout(timer);var q=input.value.trim();if(!q)return;timer=setTimeout(async function(){var cards=[...document.querySelectorAll('.anime-card')];var visible=cards.some(function(c){return c.style.display!=='none'});if(visible)return;try{var query='query($search:String){Page(perPage:6){media(search:$search,type:ANIME){id title{english romaji}averageScore startDate{year}episodes genres coverImage{large}description}}}';var r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:query,variables:{search:q}})});if(!r.ok)return;var j=await r.json();var list=(j.data&&j.data.Page&&j.data.Page.media)||[];if(!list.length)return;list.forEach(function(x){if(!window.animeData)return;if(window.animeData.some(function(a){return String(a.apiId||'')===String(x.id)||a.title.toLowerCase()===(x.title.english||x.title.romaji||'').toLowerCase()}))return;window.animeData.push({id:900000000+x.id,apiId:x.id,title:x.title.english||x.title.romaji||'Unknown',rating:x.averageScore?x.averageScore/10:0,year:x.startDate&&x.startDate.year||0,eps:x.episodes||0,genre:(x.genres||[]).map(function(g){return g.toLowerCase()}),badge:'new',color:'#7c3aed',secondaryColor:'#ec4899',desc:(x.description||'').replace(/<[^>]*>/g,''),poster:x.coverImage&&x.coverImage.large||''});});if(typeof renderGrids==='function')renderGrids();input.dispatchEvent(new Event('input'));}catch(e){}} ,500)});};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',addApiSearch);else addApiSearch();})();<\/script>`;
+      html=html.replace('</body>',patch+'</body>');
       document.open();
       document.write(html);
       document.close();

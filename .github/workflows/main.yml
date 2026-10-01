@@ -1,0 +1,15 @@
+name: Windows Runner Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check Windows
+        shell: powershell
+        run: |
+          Write-Host "Windows runner is working"
+          systeminfo | findstr /B /C:"OS Name" /C:"OS Version"
